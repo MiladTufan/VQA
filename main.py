@@ -9,8 +9,6 @@ os.system("color")
 
 utils.print_torch_info()
 
-
-
 def main(args):
     coco = COCODataset(args.coco_root, split="train")
     coco.show_sample()
@@ -21,7 +19,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Entry Point of VQA Algo")
-    parser.add_argument("--coco_root", type=str, help=globals.HELP_MSGS["COCO_ROOT_HELP"])
+    parser.add_argument("--coco_root", type=str, help="path/to/coco/root/dir")
+    parser.add_argument("--train", type=str, help="Start training loop")
     
     args = parser.parse_args()
     

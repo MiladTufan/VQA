@@ -5,12 +5,6 @@
 
 
 
-
-
-HELP_MSGS = {
-    "COCO_ROOT_HELP" : "Path to the COCO root directory."
-}
-
 COLOR_CODES = {
     "black": "\033[30m",
     "red": "\033[31m",
