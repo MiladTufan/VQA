@@ -1,0 +1,10 @@
+# Ignore everything in the data folder
+data/*
+
+# Don't ignore the buildenv folder
+!buildenv/
+
+# Ignore the venv folder in the buildenv folder
+buildenv/venv/
+
+**/__pycache__/
