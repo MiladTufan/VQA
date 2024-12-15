@@ -38,7 +38,6 @@ def main(args):
     coco = COCODataset(args.coco_root, split="train")
     trainer = COCOTrainer(coco)
     trainer.train()
-    # test
 
 
 #########################################################################
