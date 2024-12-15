@@ -7,6 +7,8 @@ from PIL import Image
 from utils import globals
 import matplotlib.pyplot as plt
 
+from tqdm import tqdm
+
 class COCODataset(Dataset):
     def __init__(self, root_dir, split="train", transform=None):
         self.coco_root_dir = root_dir
@@ -28,6 +30,28 @@ class COCODataset(Dataset):
     
     def collate_fn(self):
         return lambda x: tuple(zip(*x))
+        
+    def coco_to_yolo(self):
+        os.makedirs(self.labels_dir, exist_ok=True)
+        curr_label_dir = os.path.join(self.labels_dir, self.split)
+        os.makedirs(curr_label_dir, exist_ok=False)
+        all_labels = self.coco.loadAnns(self.coco.getAnnIds())
+        all_imgs = self.coco.loadImgs(self.coco.getImgIds())
+        
+        for label, img_data in tqdm(zip(all_labels, all_imgs), desc="Converting COCO labels to YOLO format", total=len(all_labels)):
+            bbox = label['bbox']
+            class_label = label['category_id']
+            width = img_data['width']
+            height = img_data['height']
+            x = bbox[0]/width
+            y = bbox[1]/height
+            w = bbox[2]/width
+            h = bbox[3]/height
+            
+            final_label = str(class_label) + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h) + "\n"
+            img_label_name = img_data["file_name"].replace(".jpg", ".txt")
+            with open(os.path.join(curr_label_dir, img_label_name), "a") as file:
+                file.write(final_label)
     
     def show_sample(self, id: int = 0):
         img_id = self.coco.getImgIds()[id]
