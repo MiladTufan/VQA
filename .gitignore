@@ -8,3 +8,8 @@ data/*
 buildenv/venv/
 
 **/__pycache__/
+
+.vscode/*
+
+runs/*
+*.pt
