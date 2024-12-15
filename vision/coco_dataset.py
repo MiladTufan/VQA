@@ -31,26 +31,58 @@ class COCODataset(Dataset):
     def collate_fn(self):
         return lambda x: tuple(zip(*x))
         
+    @staticmethod
+    def convert_coco_bbox_to_yolo(bbox, img_width, img_height):
+        box_width = bbox[2]
+        box_height = bbox[3]
+        
+        x = (bbox[0] + box_width / 2) / img_width
+        y = (bbox[1] + box_height / 2) / img_height
+        w = box_width / img_width
+        h = box_height / img_height
+        
+        return x, y, w, h
+    
+    @staticmethod
+    def get_category_name(all_categories, id):
+        for cat in all_categories:
+            if cat["id"] == id:
+                return cat["name"]
+    
     def coco_to_yolo(self):
         os.makedirs(self.labels_dir, exist_ok=True)
         curr_label_dir = os.path.join(self.labels_dir, self.split)
-        os.makedirs(curr_label_dir, exist_ok=False)
+        os.makedirs(curr_label_dir, exist_ok=True)
+        
         all_labels = self.coco.loadAnns(self.coco.getAnnIds())
         all_imgs = self.coco.loadImgs(self.coco.getImgIds())
+        all_categories = self.coco.loadCats(self.coco.getCatIds())
+        ann_ids = self.coco.getAnnIds(imgIds=all_imgs[0]["id"])
+        anns = self.coco.loadAnns(ann_ids)
         
-        for label, img_data in tqdm(zip(all_labels, all_imgs), desc="Converting COCO labels to YOLO format", total=len(all_labels)):
-            bbox = label['bbox']
-            class_label = label['category_id']
-            width = img_data['width']
-            height = img_data['height']
-            x = bbox[0]/width
-            y = bbox[1]/height
-            w = bbox[2]/width
-            h = bbox[3]/height
-            
-            final_label = str(class_label) + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h) + "\n"
+        
+        
+        for img_data in  tqdm(all_imgs, desc="Converting COCO labels to YOLO format", total=len(all_imgs)):
+            ann_ids = self.coco.getAnnIds(imgIds=img_data["id"])
+            anns = self.coco.loadAnns(ann_ids)
+            img_width = img_data['width']
+            img_height = img_data['height']
             img_label_name = img_data["file_name"].replace(".jpg", ".txt")
-            with open(os.path.join(curr_label_dir, img_label_name), "a") as file:
+            final_label = ""
+            
+            for ann in anns:
+                cat_id = ann['category_id']
+                bbox = ann['bbox']
+                class_name = COCODataset.get_category_name(all_categories, cat_id)
+                class_idx = globals.COCO_CLASSES.index(class_name)
+                x, y, w, h = COCODataset.convert_coco_bbox_to_yolo(bbox, img_width, img_height)
+                
+                if ann is not anns[-1]:
+                    final_label += str(class_idx) + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h) + "\n"
+                else:
+                    final_label += str(class_idx) + " " + str(x) + " " + str(y) + " " + str(w) + " " + str(h)
+                    
+            with open(os.path.join(curr_label_dir, img_label_name), "w") as file:
                 file.write(final_label)
     
     def show_sample(self, id: int = 0):
