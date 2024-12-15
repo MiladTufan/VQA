@@ -5,7 +5,7 @@ from vision.coco_dataset import COCODataset
 
 
 class COCOTrainer():
-    def __init__(self, dataset: COCODataset, batch_size: int = 8):
+    def __init__(self, dataset: COCODataset, batch_size: int = 8, model = None):
         self.dataset = dataset
         self.batch_size = batch_size
         self.loader = DataLoader(dataset, batch_size, shuffle=True, collate_fn=dataset.collate_fn())
